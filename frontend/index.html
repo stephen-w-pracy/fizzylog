@@ -1,0 +1,43 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>fizzylog</title>
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+    <div class="app">
+      <header class="header">
+        <div>
+          <h1>fizzylog</h1>
+          <p>Live request counts by path</p>
+        </div>
+        <div class="status" id="status">Loading...</div>
+      </header>
+
+      <section class="controls">
+        <div class="control-group">
+          <span class="label">Status ranges</span>
+          <div class="chips" id="range-chips"></div>
+        </div>
+        <div class="control-group">
+          <label class="label" for="exact-input">Exact codes (overrides ranges)</label>
+          <input
+            id="exact-input"
+            class="text-input"
+            type="text"
+            placeholder="200,304,404"
+          />
+        </div>
+      </section>
+
+      <section class="chart-wrap">
+        <div id="chart" class="chart"></div>
+      </section>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/echarts@5/dist/echarts.min.js"></script>
+    <script src="app.js"></script>
+  </body>
+</html>

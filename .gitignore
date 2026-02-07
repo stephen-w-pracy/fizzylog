@@ -1,0 +1,7 @@
+AGENTS.md
+SPEC.md
+node_modules
+dist
+.DS_Store
+.env
+prompt.txt

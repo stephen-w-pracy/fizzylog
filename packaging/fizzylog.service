@@ -1,0 +1,11 @@
+[Unit]
+Description=fizzylog
+After=network.target nginx.service
+
+[Service]
+Type=simple
+ExecStart=python -m fizzylog.main --config /etc/fizzylog/config.yml
+Restart=on-failure
+
+[Install]
+WantedBy=multi-user.target
