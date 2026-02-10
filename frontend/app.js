@@ -121,6 +121,42 @@ function initChart() {
   const el = document.getElementById("chart");
   chart = echarts.init(el, null, { renderer: "canvas" });
   window.addEventListener("resize", () => chart.resize());
+  chart.setOption({
+    animation: false,
+    tooltip: {
+      trigger: "axis",
+    },
+    legend: {
+      top: 0,
+    },
+    grid: {
+      left: 40,
+      right: 24,
+      top: 40,
+      bottom: 56,
+    },
+    xAxis: {
+      type: "time",
+      axisLine: { lineStyle: { color: "#c8c2b9" } },
+    },
+    yAxis: {
+      type: "value",
+      min: 0,
+      splitLine: { lineStyle: { color: "#eee8e0" } },
+    },
+    dataZoom: [
+      {
+        type: "slider",
+        height: 20,
+        bottom: 16,
+        borderColor: "#e2ded7",
+        fillerColor: "rgba(42, 111, 105, 0.15)",
+        handleStyle: { color: "#2a6f69" },
+        textStyle: { color: "#6b6760" },
+      },
+    ],
+    series: [],
+  });
 }
 
 function renderSeries(seriesResponse) {
@@ -138,33 +174,10 @@ function renderSeries(seriesResponse) {
     };
   });
 
-  const option = {
-    animation: false,
-    tooltip: {
-      trigger: "axis",
-    },
-    legend: {
-      top: 0,
-    },
-    grid: {
-      left: 40,
-      right: 24,
-      top: 40,
-      bottom: 32,
-    },
-    xAxis: {
-      type: "time",
-      axisLine: { lineStyle: { color: "#c8c2b9" } },
-    },
-    yAxis: {
-      type: "value",
-      min: 0,
-      splitLine: { lineStyle: { color: "#eee8e0" } },
-    },
-    series: chartSeries,
-  };
-
-  chart.setOption(option, true);
+  chart.setOption(
+    { series: chartSeries },
+    { notMerge: false, replaceMerge: ["series"] }
+  );
 }
 
 async function fetchAndRender() {
