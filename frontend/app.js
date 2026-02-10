@@ -174,7 +174,7 @@ function initChart() {
       left: 40,
       right: 24,
       top: 40,
-      bottom: 56,
+      bottom: 88,
     },
     xAxis: {
       type: "time",
@@ -188,11 +188,13 @@ function initChart() {
     dataZoom: [
       {
         type: "slider",
-        height: 20,
-        bottom: 16,
+        height: 56,
+        bottom: 8,
         borderColor: "#e2ded7",
         fillerColor: "rgba(42, 111, 105, 0.15)",
         handleStyle: { color: "#2a6f69" },
+        moveHandleSize: 16,
+        moveHandleStyle: { color: "#2a6f69" },
         textStyle: { color: "#6b6760" },
         start: storedZoom ? storedZoom.start : undefined,
         end: storedZoom ? storedZoom.end : undefined,
