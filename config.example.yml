@@ -1,0 +1,64 @@
+log:
+  # NGINX access log to tail
+  path: /var/log/nginx/access.log
+  # Only nginx_combined is supported
+  format: nginx_combined
+
+window:
+  # How far back to display in the chart (seconds)
+  lookback_seconds: 21600
+  # Bucket size for rollups (seconds)
+  bucket_seconds: 60
+
+paths:
+  # Required: explicit list of paths to track
+  include_exact:
+    - /
+    - /terms.html
+  # Optional: rewrite incoming paths to canonical ones
+  aliases:
+    /index.html: /
+  # Remove query strings before matching
+  strip_query_string: true
+  # Ignore static assets by extension
+  ignore_static_assets: true
+  # Extensions ignored when ignore_static_assets is true
+  ignore_extensions:
+    - .css
+    - .js
+    - .png
+    - .jpg
+    - .jpeg
+    - .gif
+    - .svg
+    - .ico
+    - .map
+    - .woff
+    - .woff2
+    - .ttf
+    - .eot
+
+status_filter:
+  # default_mode: ranges | exact
+  default_mode: ranges
+  # Used when default_mode is ranges
+  default_ranges: [2xx, 3xx]
+  # Used when default_mode is exact
+  default_exact: []
+
+ui:
+  # Polling interval for the frontend (seconds)
+  refresh_seconds: 2
+  # Maximum buckets to return
+  max_points: 360
+
+storage:
+  # backend: sqlite | memory
+  backend: sqlite
+  sqlite_path: /var/lib/fizzylog/rollups.sqlite
+  # Rollups older than this are deleted (seconds)
+  retention_seconds: 43200
+
+ingest:
+  # Flush rollups to SQLite every N seconds
+  flush_seconds: 2
