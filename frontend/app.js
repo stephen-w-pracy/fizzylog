@@ -10,6 +10,10 @@ let refreshTimer = null;
 
 const RANGE_OPTIONS = ["2xx", "3xx", "4xx", "5xx"];
 let selectedRanges = new Set();
+const STORAGE_KEYS = {
+  ranges: "fizzylog.statusRanges",
+  exact: "fizzylog.statusExact",
+};
 
 function setStatus(message) {
   statusEl.textContent = message;
@@ -25,6 +29,7 @@ function buildChip(label) {
     } else {
       selectedRanges.add(label);
     }
+    persistRanges();
     syncChipState();
     fetchAndRender();
   });
@@ -53,6 +58,45 @@ function buildQuery() {
     ranges.push(...meta.status_filter.default_ranges);
   }
   return `status_ranges=${encodeURIComponent(ranges.join(","))}`;
+}
+
+function persistRanges() {
+  const values = Array.from(selectedRanges);
+  localStorage.setItem(STORAGE_KEYS.ranges, JSON.stringify(values));
+}
+
+function persistExact() {
+  const value = exactInputEl.value.trim();
+  if (value.length === 0) {
+    localStorage.removeItem(STORAGE_KEYS.exact);
+    return;
+  }
+  localStorage.setItem(STORAGE_KEYS.exact, value);
+}
+
+function loadStoredRanges() {
+  const raw = localStorage.getItem(STORAGE_KEYS.ranges);
+  if (!raw) {
+    return null;
+  }
+  try {
+    const parsed = JSON.parse(raw);
+    if (!Array.isArray(parsed)) {
+      return null;
+    }
+    const filtered = parsed.filter((item) => RANGE_OPTIONS.includes(item));
+    return filtered.length > 0 ? filtered : null;
+  } catch (error) {
+    return null;
+  }
+}
+
+function loadStoredExact() {
+  const raw = localStorage.getItem(STORAGE_KEYS.exact);
+  if (!raw) {
+    return "";
+  }
+  return raw;
 }
 
 async function fetchMeta() {
@@ -142,6 +186,7 @@ function setupControls() {
   syncChipState();
 
   exactInputEl.addEventListener("input", () => {
+    persistExact();
     fetchAndRender();
   });
 }
@@ -149,7 +194,12 @@ function setupControls() {
 async function init() {
   try {
     meta = await fetchMeta();
-    selectedRanges = new Set(meta.status_filter.default_ranges || []);
+    const storedRanges = loadStoredRanges();
+    const storedExact = loadStoredExact();
+    selectedRanges = new Set(storedRanges || meta.status_filter.default_ranges || []);
+    if (storedExact) {
+      exactInputEl.value = storedExact;
+    }
     setupControls();
     initChart();
     await fetchAndRender();
