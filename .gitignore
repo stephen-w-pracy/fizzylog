@@ -1,7 +1,11 @@
 AGENTS.md
 SPEC.md
-node_modules
-dist
 .DS_Store
 .env
 prompt.txt
+error.log
+*.pyc
+__pycache__/
+venv/
+node_modules/
+dist/
