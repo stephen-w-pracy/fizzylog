@@ -13,6 +13,7 @@ let selectedRanges = new Set();
 const STORAGE_KEYS = {
   ranges: "fizzylog.statusRanges",
   exact: "fizzylog.statusExact",
+  zoom: "fizzylog.zoom",
 };
 
 function setStatus(message) {
@@ -99,6 +100,45 @@ function loadStoredExact() {
   return raw;
 }
 
+function loadStoredZoom() {
+  const raw = localStorage.getItem(STORAGE_KEYS.zoom);
+  if (!raw) {
+    return null;
+  }
+  try {
+    const parsed = JSON.parse(raw);
+    const start = parsed && typeof parsed.start === "number" ? parsed.start : null;
+    const end = parsed && typeof parsed.end === "number" ? parsed.end : null;
+    if (start === null || end === null) {
+      return null;
+    }
+    if (start < 0 || end > 100 || start >= end) {
+      return null;
+    }
+    return { start, end };
+  } catch (error) {
+    return null;
+  }
+}
+
+let zoomSaveTimer = null;
+function scheduleZoomSave(payload) {
+  if (!payload) {
+    return;
+  }
+  if (zoomSaveTimer) {
+    clearTimeout(zoomSaveTimer);
+  }
+  zoomSaveTimer = setTimeout(() => {
+    const start = typeof payload.start === "number" ? payload.start : null;
+    const end = typeof payload.end === "number" ? payload.end : null;
+    if (start === null || end === null) {
+      return;
+    }
+    localStorage.setItem(STORAGE_KEYS.zoom, JSON.stringify({ start, end }));
+  }, 120);
+}
+
 async function fetchMeta() {
   const response = await fetch("/api/v1/meta");
   if (!response.ok) {
@@ -121,6 +161,7 @@ function initChart() {
   const el = document.getElementById("chart");
   chart = echarts.init(el, null, { renderer: "canvas" });
   window.addEventListener("resize", () => chart.resize());
+  const storedZoom = loadStoredZoom();
   chart.setOption({
     animation: false,
     tooltip: {
@@ -153,9 +194,21 @@ function initChart() {
         fillerColor: "rgba(42, 111, 105, 0.15)",
         handleStyle: { color: "#2a6f69" },
         textStyle: { color: "#6b6760" },
+        start: storedZoom ? storedZoom.start : undefined,
+        end: storedZoom ? storedZoom.end : undefined,
       },
     ],
     series: [],
+  });
+  chart.on("datazoom", (event) => {
+    if (event && typeof event.start === "number" && typeof event.end === "number") {
+      scheduleZoomSave({ start: event.start, end: event.end });
+      return;
+    }
+    const option = chart.getOption();
+    if (option && option.dataZoom && option.dataZoom[0]) {
+      scheduleZoomSave(option.dataZoom[0]);
+    }
   });
 }
 
