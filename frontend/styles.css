@@ -101,6 +101,11 @@ body {
   border-radius: 10px;
   border: 1px solid var(--border);
   font-size: 15px;
+  box-sizing: border-box;
+}
+
+.text-input::placeholder {
+  color: #a49f97;
 }
 
 .chart-wrap {
