@@ -36,6 +36,7 @@ def create_app(config: Config, ingest_state, sqlite_path: str) -> FastAPI:
     def get_meta() -> Dict[str, object]:
         return {
             "log": {"path": config.log.path, "format": config.log.format},
+            "api": {"port": config.api.port},
             "window": {
                 "lookback_seconds": config.window.lookback_seconds,
                 "bucket_seconds": config.window.bucket_seconds,

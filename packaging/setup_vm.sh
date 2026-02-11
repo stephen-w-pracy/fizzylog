@@ -26,6 +26,9 @@ log:
   path: /var/log/nginx/access.log
   format: nginx_combined
 
+api:
+  port: 8081
+
 window:
   lookback_seconds: 21600
   bucket_seconds: 60

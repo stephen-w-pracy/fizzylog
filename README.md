@@ -61,7 +61,7 @@ Key defaults:
 
 - Access log: `/var/log/nginx/access.log`
 - SQLite DB: `/var/lib/fizzylog/rollups.sqlite`
-- FastAPI: `127.0.0.1:8081`
+- FastAPI: `127.0.0.1:8081` (configurable)
 - UI refresh: every 2 seconds
 - Default status filter: `2xx+3xx`
 

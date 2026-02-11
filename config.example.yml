@@ -4,6 +4,10 @@ log:
   # Only nginx_combined is supported
   format: nginx_combined
 
+api:
+  # FastAPI port (NGINX should proxy /api/ to this)
+  port: 8081
+
 window:
   # How far back to display in the chart (seconds)
   lookback_seconds: 21600

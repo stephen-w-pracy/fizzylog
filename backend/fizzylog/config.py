@@ -31,6 +31,11 @@ class LogConfig:
 
 
 @dataclass
+class ApiConfig:
+    port: int = 8081
+
+
+@dataclass
 class WindowConfig:
     lookback_seconds: int = 21600
     bucket_seconds: int = 60
@@ -73,6 +78,7 @@ class IngestConfig:
 @dataclass
 class Config:
     log: LogConfig
+    api: ApiConfig
     window: WindowConfig
     paths: PathsConfig
     status_filter: StatusFilterConfig
@@ -120,6 +126,11 @@ def load_config(path: str) -> Config:
     log_cfg = LogConfig(
         path=str(log_section["path"]),
         format=str(log_section.get("format", "nginx_combined")),
+    )
+
+    api_section = _get_section(data, "api")
+    api_cfg = ApiConfig(
+        port=int(api_section.get("port", 8081)),
     )
 
     window_section = _get_section(data, "window")
@@ -189,6 +200,8 @@ def load_config(path: str) -> Config:
 
     if log_cfg.format != "nginx_combined":
         raise ValueError("Only nginx_combined log format is supported")
+    if api_cfg.port <= 0 or api_cfg.port > 65535:
+        raise ValueError("api.port must be between 1 and 65535")
     if window_cfg.bucket_seconds <= 0:
         raise ValueError("window.bucket_seconds must be > 0")
     if window_cfg.lookback_seconds <= 0:
@@ -200,6 +213,7 @@ def load_config(path: str) -> Config:
 
     return Config(
         log=log_cfg,
+        api=api_cfg,
         window=window_cfg,
         paths=paths_cfg,
         status_filter=status_cfg,
