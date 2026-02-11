@@ -76,8 +76,7 @@ rsync -a --delete "${FRONTEND_DIR}/" /var/www/fizzylog/
 
 cat > /etc/nginx/sites-available/fizzylog <<'EOF'
 server {
-    listen 80;
-    server_name _;
+    listen 81;
 
     root /var/www/fizzylog;
     index index.html;
