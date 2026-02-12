@@ -10,6 +10,7 @@ let refreshTimer = null;
 
 const RANGE_OPTIONS = ["2xx", "3xx", "4xx", "5xx"];
 let selectedRanges = new Set();
+const ROLLING_WINDOW = 5;
 const STORAGE_KEYS = {
   ranges: "fizzylog.statusRanges",
   exact: "fizzylog.statusExact",
@@ -218,21 +219,53 @@ function renderSeries(seriesResponse) {
   const bucketStarts = seriesResponse.bucket_start_utc || [];
   const timestamps = bucketStarts.map((value) => value * 1000);
 
-  const chartSeries = (seriesResponse.series || []).map((item) => {
+  const chartSeries = [];
+  (seriesResponse.series || []).forEach((item) => {
     const data = timestamps.map((ts, idx) => [ts, item.counts[idx] || 0]);
-    return {
+    chartSeries.push({
       name: item.path,
       type: "line",
       showSymbol: false,
       smooth: false,
       data,
-    };
+    });
+
+    if (ROLLING_WINDOW > 1) {
+      const averages = rollingAverage(item.counts || [], ROLLING_WINDOW);
+      const avgData = timestamps.map((ts, idx) => [ts, averages[idx]]);
+      chartSeries.push({
+        name: `${item.path} (avg)`,
+        type: "line",
+        showSymbol: false,
+        smooth: true,
+        lineStyle: { type: "dashed", width: 2, opacity: 0.7 },
+        data: avgData,
+      });
+    }
   });
 
   chart.setOption(
     { series: chartSeries },
     { notMerge: false, replaceMerge: ["series"] }
   );
+}
+
+function rollingAverage(values, windowSize) {
+  if (!Array.isArray(values) || values.length === 0) {
+    return [];
+  }
+  const result = [];
+  let sum = 0;
+  for (let i = 0; i < values.length; i += 1) {
+    const value = Number(values[i] || 0);
+    sum += value;
+    if (i >= windowSize) {
+      sum -= Number(values[i - windowSize] || 0);
+    }
+    const denom = Math.min(i + 1, windowSize);
+    result.push(sum / denom);
+  }
+  return result;
 }
 
 async function fetchAndRender() {
