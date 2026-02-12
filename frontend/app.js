@@ -10,6 +10,19 @@ let refreshTimer = null;
 
 const RANGE_OPTIONS = ["2xx", "3xx", "4xx", "5xx"];
 let selectedRanges = new Set();
+const ROLLING_WINDOW = 5;
+const SERIES_COLORS = [
+  "#5470C6",
+  "#91CC75",
+  "#FAC858",
+  "#EE6666",
+  "#73C0DE",
+  "#3BA272",
+  "#FC8452",
+  "#9A60B4",
+  "#EA7CCC",
+];
+const AVG_LIGHTEN = 0.55;
 const STORAGE_KEYS = {
   ranges: "fizzylog.statusRanges",
   exact: "fizzylog.statusExact",
@@ -218,21 +231,69 @@ function renderSeries(seriesResponse) {
   const bucketStarts = seriesResponse.bucket_start_utc || [];
   const timestamps = bucketStarts.map((value) => value * 1000);
 
-  const chartSeries = (seriesResponse.series || []).map((item) => {
+  const chartSeries = [];
+  (seriesResponse.series || []).forEach((item, index) => {
     const data = timestamps.map((ts, idx) => [ts, item.counts[idx] || 0]);
-    return {
+    const baseColor = SERIES_COLORS[index % SERIES_COLORS.length];
+    chartSeries.push({
       name: item.path,
       type: "line",
       showSymbol: false,
       smooth: false,
+      lineStyle: { color: baseColor },
+      itemStyle: { color: baseColor },
       data,
-    };
+    });
+
+    if (ROLLING_WINDOW > 1) {
+      const averages = rollingAverage(item.counts || [], ROLLING_WINDOW);
+      const avgData = timestamps.map((ts, idx) => [ts, averages[idx]]);
+      const avgColor = lightenColor(baseColor, AVG_LIGHTEN);
+      chartSeries.push({
+        name: `${item.path} (avg)`,
+        type: "line",
+        showSymbol: false,
+        smooth: true,
+        lineStyle: { type: "dashed", width: 2, opacity: 0.8, color: avgColor },
+        itemStyle: { color: avgColor },
+        data: avgData,
+      });
+    }
   });
 
   chart.setOption(
     { series: chartSeries },
     { notMerge: false, replaceMerge: ["series"] }
   );
+}
+
+function rollingAverage(values, windowSize) {
+  if (!Array.isArray(values) || values.length === 0) {
+    return [];
+  }
+  const result = [];
+  let sum = 0;
+  for (let i = 0; i < values.length; i += 1) {
+    const value = Number(values[i] || 0);
+    sum += value;
+    if (i >= windowSize) {
+      sum -= Number(values[i - windowSize] || 0);
+    }
+    const denom = Math.min(i + 1, windowSize);
+    result.push(sum / denom);
+  }
+  return result;
+}
+
+function lightenColor(hexColor, factor) {
+  if (!hexColor || hexColor[0] !== "#" || hexColor.length !== 7) {
+    return hexColor;
+  }
+  const r = parseInt(hexColor.slice(1, 3), 16);
+  const g = parseInt(hexColor.slice(3, 5), 16);
+  const b = parseInt(hexColor.slice(5, 7), 16);
+  const lighten = (value) => Math.round(value + (255 - value) * factor);
+  return `rgb(${lighten(r)}, ${lighten(g)}, ${lighten(b)})`;
 }
 
 async function fetchAndRender() {
