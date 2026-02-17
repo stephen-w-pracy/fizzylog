@@ -8,6 +8,8 @@ requests over time, and renders a clean, interactive time-series line chart.
 
 It's designed to be easy to run and understand.
 
+![Screenshot of fizzylog UI showing line chart of request counts over time.](./assets/fizzylog-screenshot.jpg)
+
 ## What it does
 
 - Tails an NGINX access log in real time
