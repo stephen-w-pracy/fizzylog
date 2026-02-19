@@ -61,6 +61,7 @@ class StatusFilterConfig:
 class UIConfig:
     refresh_seconds: int = 2
     max_points: int = 360
+    time_default: str = "local"
 
 
 @dataclass
@@ -184,6 +185,7 @@ def load_config(path: str) -> Config:
     ui_cfg = UIConfig(
         refresh_seconds=int(ui_section.get("refresh_seconds", 2)),
         max_points=int(ui_section.get("max_points", 360)),
+        time_default=str(ui_section.get("time_default", "local")),
     )
 
     storage_section = _get_section(data, "storage")
@@ -210,6 +212,8 @@ def load_config(path: str) -> Config:
         raise ValueError("ingest.flush_seconds must be > 0")
     if storage_cfg.retention_seconds <= 0:
         raise ValueError("storage.retention_seconds must be > 0")
+    if ui_cfg.time_default not in ("local", "utc"):
+        raise ValueError("ui.time_default must be 'local' or 'utc'")
 
     return Config(
         log=log_cfg,

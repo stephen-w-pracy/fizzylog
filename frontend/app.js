@@ -3,13 +3,16 @@
 const statusEl = document.getElementById("status");
 const rangeChipsEl = document.getElementById("range-chips");
 const exactInputEl = document.getElementById("exact-input");
+const timeToggleEl = document.getElementById("time-utc");
 
 let meta = null;
 let chart = null;
 let refreshTimer = null;
+let lastUpdateMs = null;
 
 const RANGE_OPTIONS = ["2xx", "3xx", "4xx", "5xx"];
 let selectedRanges = new Set();
+let useUtc = false;
 const ROLLING_WINDOW = 5;
 const SERIES_COLORS = [
   "#5470C6",
@@ -27,6 +30,7 @@ const STORAGE_KEYS = {
   ranges: "fizzylog.statusRanges",
   exact: "fizzylog.statusExact",
   zoom: "fizzylog.zoom",
+  timeMode: "fizzylog.timeMode",
 };
 
 function setStatus(message) {
@@ -134,6 +138,67 @@ function loadStoredZoom() {
   }
 }
 
+function loadStoredTimeMode() {
+  const raw = localStorage.getItem(STORAGE_KEYS.timeMode);
+  if (raw === "utc") {
+    return true;
+  }
+  if (raw === "local") {
+    return false;
+  }
+  return null;
+}
+
+function resolveDefaultTimeMode(value) {
+  if (!value || typeof value !== "string") {
+    return false;
+  }
+  const normalized = value.toLowerCase();
+  if (normalized === "utc") {
+    return true;
+  }
+  if (normalized === "local") {
+    return false;
+  }
+  return false;
+}
+
+function persistTimeMode() {
+  localStorage.setItem(STORAGE_KEYS.timeMode, useUtc ? "utc" : "local");
+}
+
+function pad2(value) {
+  return String(value).padStart(2, "0");
+}
+
+function formatTimestamp(ms, includeSeconds) {
+  const date = new Date(ms);
+  const year = useUtc ? date.getUTCFullYear() : date.getFullYear();
+  const month = useUtc ? date.getUTCMonth() + 1 : date.getMonth() + 1;
+  const day = useUtc ? date.getUTCDate() : date.getDate();
+  const hours = useUtc ? date.getUTCHours() : date.getHours();
+  const minutes = useUtc ? date.getUTCMinutes() : date.getMinutes();
+  const seconds = useUtc ? date.getUTCSeconds() : date.getSeconds();
+  const base = `${year}-${pad2(month)}-${pad2(day)} ${pad2(hours)}:${pad2(minutes)}`;
+  if (!includeSeconds) {
+    return base;
+  }
+  return `${base}:${pad2(seconds)}`;
+}
+
+function axisTimeFormatter(value) {
+  return formatTimestamp(value, false);
+}
+
+function tooltipFormatter(params) {
+  if (!params || params.length === 0) {
+    return "";
+  }
+  const header = formatTimestamp(params[0].value[0], true);
+  const lines = params.map((item) => `${item.marker} ${item.seriesName}: ${item.value[1]}`);
+  return [header, ...lines].join("<br/>");
+}
+
 let zoomSaveTimer = null;
 function scheduleZoomSave(payload) {
   if (!payload) {
@@ -179,6 +244,7 @@ function initChart() {
     animation: false,
     tooltip: {
       trigger: "axis",
+      formatter: tooltipFormatter,
     },
     legend: {
       top: 0,
@@ -192,6 +258,7 @@ function initChart() {
     xAxis: {
       type: "time",
       axisLine: { lineStyle: { color: "#c8c2b9" } },
+      axisLabel: { formatter: axisTimeFormatter },
     },
     yAxis: {
       type: "value",
@@ -225,6 +292,19 @@ function initChart() {
       scheduleZoomSave(option.dataZoom[0]);
     }
   });
+}
+
+function applyTimeMode() {
+  if (!chart) {
+    return;
+  }
+  chart.setOption(
+    {
+      xAxis: { axisLabel: { formatter: axisTimeFormatter } },
+      tooltip: { formatter: tooltipFormatter },
+    },
+    { notMerge: false }
+  );
 }
 
 function renderSeries(seriesResponse) {
@@ -300,7 +380,8 @@ async function fetchAndRender() {
   try {
     const series = await fetchSeries();
     renderSeries(series);
-    setStatus(`Updated ${new Date().toLocaleTimeString()}`);
+    lastUpdateMs = Date.now();
+    setStatus(`Updated ${formatTimestamp(lastUpdateMs, true)}`);
   } catch (error) {
     setStatus("Error loading data");
     console.error(error);
@@ -318,6 +399,15 @@ function setupControls() {
     persistExact();
     fetchAndRender();
   });
+
+  timeToggleEl.addEventListener("change", () => {
+    useUtc = timeToggleEl.checked;
+    persistTimeMode();
+    applyTimeMode();
+    if (lastUpdateMs) {
+      setStatus(`Updated ${formatTimestamp(lastUpdateMs, true)}`);
+    }
+  });
 }
 
 async function init() {
@@ -325,10 +415,14 @@ async function init() {
     meta = await fetchMeta();
     const storedRanges = loadStoredRanges();
     const storedExact = loadStoredExact();
+    const storedTimeMode = loadStoredTimeMode();
     selectedRanges = new Set(storedRanges || meta.status_filter.default_ranges || []);
     if (storedExact) {
       exactInputEl.value = storedExact;
     }
+    const defaultUseUtc = resolveDefaultTimeMode(meta?.ui?.time_default);
+    useUtc = storedTimeMode === null ? defaultUseUtc : storedTimeMode;
+    timeToggleEl.checked = useUtc;
     setupControls();
     initChart();
     await fetchAndRender();

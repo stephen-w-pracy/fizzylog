@@ -55,6 +55,8 @@ ui:
   refresh_seconds: 2
   # Maximum buckets to return
   max_points: 360
+  # Default time display: local | utc
+  time_default: local
 
 storage:
   # backend: sqlite | memory
