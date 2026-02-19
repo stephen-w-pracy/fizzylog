@@ -108,6 +108,20 @@ body {
   color: #a49f97;
 }
 
+.toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 14px;
+  color: var(--text);
+}
+
+.toggle input {
+  width: 16px;
+  height: 16px;
+  accent-color: var(--accent);
+}
+
 .chart-wrap {
   background: var(--panel);
   border: 1px solid var(--border);
