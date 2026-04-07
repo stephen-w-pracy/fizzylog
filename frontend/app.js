@@ -423,6 +423,10 @@ async function init() {
     const defaultUseUtc = resolveDefaultTimeMode(meta?.ui?.time_default);
     useUtc = storedTimeMode === null ? defaultUseUtc : storedTimeMode;
     timeToggleEl.checked = useUtc;
+    if (meta.ui && meta.ui.title) {
+      document.querySelector("h1").textContent = meta.ui.title;
+      document.title = meta.ui.title;
+    }
     setupControls();
     initChart();
     await fetchAndRender();

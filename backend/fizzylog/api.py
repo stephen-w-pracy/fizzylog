@@ -57,6 +57,7 @@ def create_app(config: Config, ingest_state, sqlite_path: str) -> FastAPI:
                 "refresh_seconds": config.ui.refresh_seconds,
                 "max_points": config.ui.max_points,
                 "time_default": config.ui.time_default,
+                "title": config.ui.title,
             },
             "storage": {
                 "backend": config.storage.backend,

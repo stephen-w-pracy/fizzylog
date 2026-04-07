@@ -62,6 +62,7 @@ class UIConfig:
     refresh_seconds: int = 2
     max_points: int = 360
     time_default: str = "local"
+    title: str = "fizzylog"
 
 
 @dataclass
@@ -186,6 +187,7 @@ def load_config(path: str) -> Config:
         refresh_seconds=int(ui_section.get("refresh_seconds", 2)),
         max_points=int(ui_section.get("max_points", 360)),
         time_default=str(ui_section.get("time_default", "local")),
+        title=str(ui_section.get("title", "fizzylog")),
     )
 
     storage_section = _get_section(data, "storage")
