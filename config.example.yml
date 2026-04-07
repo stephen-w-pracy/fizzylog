@@ -57,6 +57,8 @@ ui:
   max_points: 360
   # Default time display: local | utc
   time_default: local
+  # Title displayed in the UI header
+  title: fizzylog
 
 storage:
   # backend: sqlite | memory
