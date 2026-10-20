@@ -45,8 +45,8 @@ time.
 
 ## Quick start
 
-Requires Python 3 with `venv`. All commands run from the repository root
-unless noted.
+Requires Python 3 with `venv`. Start from the repository root; step 1 changes
+into `backend/`, and the remaining commands run from there.
 
 ### 1. Install the backend
 
@@ -59,9 +59,9 @@ pip install -r requirements.txt
 
 ### 2. Create a local config
 
-Copy `config.example.yml` and point the log and SQLite paths somewhere
-writable. `log.path` and `paths.include_exact` are required; everything else
-has defaults.
+From `backend/`, copy `config.example.yml` and point the log and SQLite paths
+somewhere writable. `log.path` and `paths.include_exact` are required;
+everything else has defaults.
 
 ```sh
 mkdir -p /tmp/fizzylog
@@ -92,7 +92,7 @@ startup are counted. In another terminal, append a line in NGINX combined
 format for one of the configured paths:
 
 ```sh
-echo "127.0.0.1 - - [$(date -u +'%d/%b/%Y:%H:%M:%S +0000')] \"GET / HTTP/1.1\" 200 612 \"-\" \"curl/8.0\"" \
+echo "127.0.0.1 - - [$(LC_ALL=C date -u +'%d/%b/%Y:%H:%M:%S +0000')] \"GET / HTTP/1.1\" 200 612 \"-\" \"curl/8.0\"" \
   >> /tmp/fizzylog/access.log
 
 curl http://127.0.0.1:8081/api/v1/health
@@ -113,10 +113,10 @@ a full VM install (systemd unit, NGINX site, virtualenv), see
 
 ### Run the tests
 
-`pytest` is not in `requirements.txt`; install it into the same virtualenv:
+`pytest` is not in `requirements.txt`; from `backend/`, install it into the same
+virtualenv:
 
 ```sh
-cd backend
 . venv/bin/activate
 pip install pytest
 python -m pytest tests/
