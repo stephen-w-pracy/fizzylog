@@ -1,4 +1,5 @@
 from fizzylog.config import (
+    ApiConfig,
     Config,
     IngestConfig,
     LogConfig,
@@ -20,6 +21,7 @@ def make_config(
 ):
     return Config(
         log=LogConfig(path="/var/log/nginx/access.log"),
+        api=ApiConfig(),
         window=WindowConfig(),
         paths=PathsConfig(
             include_exact=include_exact,
